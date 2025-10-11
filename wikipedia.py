@@ -198,6 +198,30 @@ def SC6(page): #시나리오6 버튼 선택 해제 불가, 복수 선택 불가 
                 print(f"{name} 선택 시 {other_name} 체크해제")
 
 
+def SC7(page):
+    for name, value, keys in wide_case:
+        wideradio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+        wideradio.click()
+        expect(wideradio).to_be_checked()
+        print(f"{name} 버튼 클릭 및 선택 성공")
+        wideradio.check()
+        expect(wideradio).to_be_checked()
+
+        html_class = page.locator("html").get_attribute("class") or ""
+        assert keys in html_class, f"{name} 선택 후 반영 실패"
+        print(f"{name} 재선택 확인")
+
+        for other_name, other_value, keys in wide_case:
+            if other_value != value:
+                other_radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{other_value}"]')
+                assert not other_radio.is_checked(), f"{name} 선택 시 {other_name}도 체크됨 (복수 선택 오류)"
+                print(f"{name} 선택 시 {other_name} 체크해제")
+
+        time.sleep(3)
+      
+
+
+
 # 사이드 패널 숨기기 버튼 선택
 def open_appearance_button(page):
     btn = page.locator('xpath=/html/body/div[2]/div/div[3]/main/div[2]/div/nav[2]/div/div/div[1]/button[2]')
@@ -223,7 +247,6 @@ def open_appearance_button(page):
         print("넓게 설명문 확인")
     else:
         print("넓게 설명문 오류")
-    
 
 with sync_playwright() as p:
     browser = p.firefox.launch(headless=False)
@@ -232,7 +255,9 @@ with sync_playwright() as p:
     page.goto(HOME)
     time.sleep(3)
 
-    SC6(page)
+    #SC6(page)
+
+    SC7(page)
 
 
     # SC1(page)    # 시나리오1 테스트케이스
