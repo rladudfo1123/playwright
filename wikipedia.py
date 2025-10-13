@@ -16,7 +16,7 @@ wide_case = [
 WIDE_DESC = "콘텐츠는 브라우저 창에 맞도록 최대한 넓게 맞춥니다."
 
 
-def SC1(page):  #시나리오1 홈화면 진입 시 사이드 패널 디폴트 확인
+def SC1(page):    #시나리오1 홈화면 진입 시 사이드 패널 디폴트 확인
     panel = page.locator('xpath=//*[@id="vector-appearance-pinned-container"]')
     assert panel.is_visible(), "사이드 패널 미노출"
     print("사이드 패널 노출 확인")
@@ -49,7 +49,7 @@ def SC1(page):  #시나리오1 홈화면 진입 시 사이드 패널 디폴트 �
     print("글 색상 라이트 디폴트 선택 확인")
 
 
-def SC2(page):  #시나리오2 글 크기 라디오, 문구 선택 가능 검증 시나리오
+def SC2(page):    #시나리오2 글 크기 라디오, 문구 선택 가능 검증 시나리오
     for name,value in font_sizes:
 
         sizeradio = f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]'
@@ -87,7 +87,7 @@ def SC2(page):  #시나리오2 글 크기 라디오, 문구 선택 가능 검증
     print("크기 문구 선택 시 동작 확인")
 
 
-def SC3(page, context):     #시나리오3 글 크기 버튼 선택 시 새 탭 열어서 유지 확인
+def SC3(page, context):    #시나리오3 글 크기 버튼 선택 시 새 탭 열어서 유지 확인
     for name,value in font_sizes:
         radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')    
         radio.click()
@@ -110,7 +110,7 @@ def SC3(page, context):     #시나리오3 글 크기 버튼 선택 시 새 탭 
     print("글자 크기 설정 유지 확인")
 
 
-def SC4(page):   #시나리오4 글 너비 라디오, 문구 선택 가능 검증 시나리오
+def SC4(page):    #시나리오4 글 너비 라디오, 문구 선택 가능 검증 시나리오
     for name, value, keys in wide_case:
 
         wideradio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
@@ -151,7 +151,7 @@ def SC4(page):   #시나리오4 글 너비 라디오, 문구 선택 가능 검�
     print("너비 라디오 버튼 검증 끝")
 
 
-def SC5(page, context):   #시나리오5 글 너비 선택 시 새 탭 열어서 유지 확인
+def SC5(page, context):    #시나리오5 글 너비 선택 시 새 탭 열어서 유지 확인
     for name, value, keys in wide_case:
         radiowide = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
         radiowide.click()
@@ -173,7 +173,7 @@ def SC5(page, context):   #시나리오5 글 너비 선택 시 새 탭 열어서
         time.sleep(2)
     print("글자 너비 설정 유지 확인")
 
-def SC6(page): #시나리오6 버튼 선택 해제 불가, 복수 선택 불가 TC
+def SC6(page):    #시나리오6 글 크기 라디오 선택 해제 불가, 복수 선택 불가 TC
     for name, value in font_sizes:
         sizeradio = f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]'
         radio = page.locator(sizeradio)
@@ -198,7 +198,7 @@ def SC6(page): #시나리오6 버튼 선택 해제 불가, 복수 선택 불가 
                 print(f"{name} 선택 시 {other_name} 체크해제")
 
 
-def SC7(page):
+def SC7(page):    # 시나리오7 너비 라디오 선택 해제 불가, 복수 선택 불가 TC
     for name, value, keys in wide_case:
         wideradio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
         wideradio.click()
@@ -255,26 +255,26 @@ with sync_playwright() as p:
     page.goto(HOME)
     time.sleep(3)
 
-    #SC6(page)
+    SC1(page)        # 시나리오1 테스트케이스
+    time.sleep(3)
 
-    SC7(page)
-
-
-    # SC1(page)    # 시나리오1 테스트케이스
-    # time.sleep(3)
-
-    # SC2(page)    # 시나리오2 테스트케이스
-    # time.sleep(3)
+    SC2(page)        # 시나리오2 테스트케이스
+    time.sleep(3)
    
-    # SC3(page, context) # 시나리오3 테스트케이스
-    # time.sleep(3)
+    SC3(page, context)        # 시나리오3 테스트케이스
+    time.sleep(3)
 
-    # SC4(page) # 시나리오4 테스트케이스
-    # time.sleep(3)
+    SC4(page)         # 시나리오4 테스트케이스
+    time.sleep(3)
 
-    # SC5(page, context) # 시나리오5 테스트케이스
-    # time.sleep(3)
+    SC5(page, context)        # 시나리오5 테스트케이스
+    time.sleep(3)
 
+    SC6(page)        # 시나리오6 테스트케이스
+    time.sleep(3)
+    
+    SC7(page)        # 시나리오7 테스트케이스
+    tim.sleep(3)
     # open_appearance_button(page) #사이드 바 숨기기 버튼
 
     time.sleep(3)
