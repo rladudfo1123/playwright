@@ -220,34 +220,6 @@ def SC7(page):    # 시나리오7 너비 라디오 선택 해제 불가, 복수 
         time.sleep(3)
       
 
-
-
-# 사이드 패널 숨기기 버튼 선택
-def open_appearance_button(page):
-    btn = page.locator('xpath=/html/body/div[2]/div/div[3]/main/div[2]/div/nav[2]/div/div/div[1]/button[2]')
-    btn.wait_for(state="visible")
-    btn.click()
-    time.sleep(1)
-
-    pop = page.locator('xpath=/html/body/div[1]/header/div[2]/nav/div[1]/nav/div[2]/div[1]/div')
-    pop_value = pop.get_attribute("popdesc")
-    print("popdesc: ", pop_value)
-
-    widthwide_radio = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-0"]')
-    widthwide_radio.click()
-    print("너비 넓게 선택 가능")
-
-    # 넓게 설명문 텍스트 추출
-    widthwide_desc = page.locator('xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/span')
-    wide_desc = widthwide_desc.inner_text()
-    print("desc = ",wide_desc)
-
-    # 넓게 설명문 텍스트 확인
-    if wide_desc == "콘텐츠는 브라우저 창에 맞도록 최대한 넓게 맞춥니다." :
-        print("넓게 설명문 확인")
-    else:
-        print("넓게 설명문 오류")
-
 with sync_playwright() as p:
     browser = p.firefox.launch(headless=False)
     context = browser.new_context()
@@ -274,8 +246,8 @@ with sync_playwright() as p:
     time.sleep(3)
     
     SC7(page)        # 시나리오7 테스트케이스
-    tim.sleep(3)
-    # open_appearance_button(page) #사이드 바 숨기기 버튼
+    time.sleep(3)
+
 
     time.sleep(3)
     browser.close()
