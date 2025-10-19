@@ -15,6 +15,12 @@ wide_case = [
 ]
 WIDE_DESC = "콘텐츠는 브라우저 창에 맞도록 최대한 넓게 맞춥니다."
 
+theme_case = [
+    ("자동", "os"),
+    ("라이트", "day"),
+    ("다크", "night",)
+]
+
 
 def SC1(page):    #시나리오1 홈화면 진입 시 사이드 패널 디폴트 확인
     panel = page.locator('xpath=//*[@id="vector-appearance-pinned-container"]')
@@ -218,7 +224,51 @@ def SC7(page):    # 시나리오7 너비 라디오 선택 해제 불가, 복수 
                 print(f"{name} 선택 시 {other_name} 체크해제")
 
         time.sleep(3)
-      
+
+
+def SC8(page):  # 시나리오8 테마 라디오 선택 해제 불가, 복수 선택 불가 TC
+    for name, value in theme_case:
+        themeradio = page.locator(f'xpath=//*[@id="skin-client-pref-skin-theme-value-{value}"]')
+        themeradio.click()
+        expect(themeradio).to_be_checked()
+        print(f"{name} 체크 버튼 성공")
+        themeradio.click()
+        expect(themeradio).to_be_checked()
+        
+        for other_name, other_value in theme_case:
+            if other_value != value:
+                other_radio = page.locator(f'xpath=//*[@id="skin-client-pref-skin-theme-value-{other_value}"]')
+                assert not other_radio.is_checked(), f"{name} 선택 시 {other_name}도 체크됨 (복수 선택 오류)"
+                print(f"{name} 선택 시 {other_name} 체크해제")
+
+    time.sleep(2)
+
+# 사이드 패널 숨기기 버튼 선택
+def open_appearance_button(page):
+    btn = page.locator('xpath=/html/body/div[2]/div/div[3]/main/div[2]/div/nav[2]/div/div/div[1]/button[2]')
+    btn.wait_for(state="visible")
+    btn.click()
+    time.sleep(1)
+
+    pop = page.locator('xpath=/html/body/div[1]/header/div[2]/nav/div[1]/nav/div[2]/div[1]/div')
+    pop_value = pop.get_attribute("popdesc")
+    print("popdesc: ", pop_value)
+
+    widthwide_radio = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-0"]')
+    widthwide_radio.click()
+    print("너비 넓게 선택 가능")
+
+    # 넓게 설명문 텍스트 추출
+    widthwide_desc = page.locator('xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/span')
+    wide_desc = widthwide_desc.inner_text()
+    print("desc = ",wide_desc)
+
+    # 넓게 설명문 텍스트 확인
+    if wide_desc == "콘텐츠는 브라우저 창에 맞도록 최대한 넓게 맞춥니다." :
+        print("넓게 설명문 확인")
+    else:
+        print("넓게 설명문 오류")
+
 
 with sync_playwright() as p:
     browser = p.firefox.launch(headless=False)
@@ -249,6 +299,9 @@ with sync_playwright() as p:
     time.sleep(3)
 
 
+
+    SC8(page)       # 시나리오8 테스트케이스
     time.sleep(3)
+    
     browser.close()
 
