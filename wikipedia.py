@@ -1,307 +1,221 @@
 from playwright.sync_api import sync_playwright, expect
-import time
 import re
+import time
 
 HOME = "https://ko.wikipedia.org/"
-font_sizes = [
-    ("작음",0),
-    ("표준",1),
-    ("큼",2)
-]
 
+font_sizes = [
+    ("작음", 0),
+    ("표준", 1),
+    ("큼", 2),
+]
 wide_case = [
     ("넓게", 0, "vector-feature-limited-width-clientpref-0"),
-    ("표준", 1, "vector-feature-limited-width-clientpref-1")
+    ("표준", 1, "vector-feature-limited-width-clientpref-1"),
 ]
 WIDE_DESC = "콘텐츠는 브라우저 창에 맞도록 최대한 넓게 맞춥니다."
 
 theme_case = [
     ("자동", "os"),
     ("라이트", "day"),
-    ("다크", "night",)
+    ("다크", "night"),
 ]
 
+def _expect_html_class_contains(page, fragment: str):
+    # <html class="... fragment ..."> 포함 여부를 정규식으로 체크
+    # 단어 경계로 오탐 줄이기
+    pattern = re.compile(rf"\b{re.escape(fragment)}\b")
+    expect(page.locator("html")).to_have_attribute("class", pattern)
 
-def SC1(page):    #시나리오1 홈화면 진입 시 사이드 패널 디폴트 확인
+# SC1: 홈 진입 시 사이드 패널/디폴트 확인
+def SC1(page):
     panel = page.locator('xpath=//*[@id="vector-appearance-pinned-container"]')
-    assert panel.is_visible(), "사이드 패널 미노출"
-    print("사이드 패널 노출 확인")
-    time.sleep(2)
-    
-    panel_title_desc = page.locator('xpath=//*[@id="vector-appearance"]/div[1]/div')
-    panel_title = panel_title_desc.inner_text()
-    assert panel_title == "보이기", "사이드 바 제목 오류"
-    print("사이드 바 제목 보이기")
-    time.sleep(2)
+    expect(panel).to_be_visible() # 사이드 패널 유무 확인
+    print("사이드 패널 확인")
 
-    panel_hide_btn = page. locator('xpath=//*[@id="vector-appearance"]/div[1]/button[2]')
-    panel_hide_btn_com = panel_hide_btn.inner_text()
-    assert panel_hide_btn_com == "숨기기", "사이드 바 숨기기 버튼 오류"
-    print("사이드 바 숨기기 버튼 확인")
-    time.sleep(2)
+    panel_title_desc = page.locator('xpath=//*[@id="vector-appearance"]/div[1]/div')
+    expect(panel_title_desc).to_have_text("보이기") # 사이드 패널 타이틀 확인
+    print("사이드 패널 보이기 문구 확인")
+
+    panel_hide_btn = page.locator('xpath=//*[@id="vector-appearance"]/div[1]/button[2]')
+    expect(panel_hide_btn).to_have_text("숨기기") # 사이드 패널 숨기기 확인
+    print("사이드 패널 숨기기 문구 확인")
 
     fontsize_default_check = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-1"]')
-    assert fontsize_default_check.is_checked(), "글 크기 표준 디폴트 오류"
-    print("글 크기 표준 디폴트 선택 확인")
+    expect(fontsize_default_check).to_be_checked() # 폰트사이즈 체크 확인
+    print("폰트크기 디폴트 표준 선택 확인")
     time.sleep(2)
 
     fontwide_default_check = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-1"]')
-    assert fontwide_default_check.is_checked(), "너비 표준 디폴트 오류"
-    print("너비 표준 디폴트 선택 확인")
+    expect(fontwide_default_check).to_be_checked() # 폰트너비 체크 확인
+    print("폰트너비 디폴트 표준 선택 확인")
+    time.sleep(2)
+    
+    fontcolor_default_check = page.locator('xpath=//*[@id="skin-client-pref-skin-theme-value-day"]')
+    expect(fontcolor_default_check).to_be_checked() # 색상 체크 확인
+    print("폰트색상 디폴트 라이트 선택 확인")
     time.sleep(2)
 
-    fontcolor_default_check = page.locator('xpath=//*[@id="skin-client-pref-skin-theme-value-day"]')
-    assert fontcolor_default_check.is_checked(), "글 색상 디폴트 오류"
-    print("글 색상 라이트 디폴트 선택 확인")
-
-
-def SC2(page):    #시나리오2 글 크기 라디오, 문구 선택 가능 검증 시나리오
-    for name,value in font_sizes:
-
-        sizeradio = f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]'
-        radio = page.locator(sizeradio)
-
+# SC2: 글 크기 라디오/라벨 클릭 검증
+def SC2(page):
+    # 글 크기 라디오 버튼 선택
+    for name, value in font_sizes:
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')
         radio.check()
         expect(radio).to_be_checked()
-        print(f"{name} 버튼 클릭 및 선택 성공")
+        _expect_html_class_contains(page, f"vector-feature-custom-font-size-clientpref-{value}")
 
-        html_class = page.locator("html").get_attribute("class") or ""
-        expected_keyword = f"vector-feature-custom-font-size-clientpref-{value}"
-        assert expected_keyword in html_class, f"{name} 버튼 선택 오류"
-        print(f"{name} 선택 사이즈 변경 확인")
-        time.sleep(1)
-
-    print("글자 크기 버튼 동작 확인")
-
-    time.sleep(3)
-
-    for name,value in font_sizes:
-        
-        label_click = page.locator(f'xpath=//*[@id="skin-client-prefs-vector-feature-custom-font-size"]/div[2]/ul/li/div/form/div[{value+1}]/label/span')
+    # 문구 클릭
+    for name, value in font_sizes:
+        label = page.locator(
+            f'xpath=//*[@id="skin-client-prefs-vector-feature-custom-font-size"]/div[2]/ul/li/div/form/div[{value+1}]/label/span'
+        )
         radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')
+        label.click()
+        expect(radio).to_be_checked()
+        _expect_html_class_contains(page, f"vector-feature-custom-font-size-clientpref-{value}")
 
-        label_click.click()
-        assert radio.is_checked(), f"{name} 문구 선택 오류"
-        print(f"{name} 문구 선택")
-
-        html_class = page.locator("html").get_attribute("class") or ""
-        expected_keyword = f"vector-feature-custom-font-size-clientpref-{value}"
-        assert expected_keyword in html_class, f"{name} 문구 선택 시 사이즈 변경 불가"
-        print(f'{name} 문구 선택 시 사이즈 변경 확인')
-        time.sleep(3)
-
-    print("크기 문구 선택 시 동작 확인")
-
-
-def SC3(page, context):    #시나리오3 글 크기 버튼 선택 시 새 탭 열어서 유지 확인
-    for name,value in font_sizes:
-        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')    
+# SC3: 글 크기 선택 후 새 탭에서 유지 확인
+def SC3(page, context):
+    for name, value in font_sizes:
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')
         radio.click()
         expect(radio).to_be_checked()
-        print(f"{name} 라디오 버튼 선택")
-        time.sleep(2)
 
         new_page = context.new_page()
         new_page.goto(HOME)
-        time.sleep(3)
-
-        new_radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')
-        if new_radio.is_checked():
-            print(f"새탭 {name} 설정 유지")
-        else:
-            print(f"새탭 {name} 설정 유지 X")
-
+        new_radio = new_page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')
+        expect(new_radio).to_be_checked()
         new_page.close()
-        time.sleep(3)
-    print("글자 크기 설정 유지 확인")
 
+# SC4: 너비 라디오/라벨 클릭 검증
+def SC4(page):
+    for name, value, key in wide_case:
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+        radio.click()
+        expect(radio).to_be_checked()
+        _expect_html_class_contains(page, key)
 
-def SC4(page):    #시나리오4 글 너비 라디오, 문구 선택 가능 검증 시나리오
-    for name, value, keys in wide_case:
-
-        wideradio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
-        wideradio.click()
-        expect(wideradio).to_be_checked()
-        html_class = page.locator("html").get_attribute("class") or ""
-        assert keys in html_class, f"{name} 선택 후 반영 실패"
-        print(f"{name}선택 확인")
-
-        time.sleep(3)
-
-        if value == 0:
-            desc = page.locator(f'xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/span')
-            text = (desc.inner_text() or "").strip()
-            assert text == WIDE_DESC, "넓게 DESC 오류"
-            print("넓게 desc 문구 확인")
+        if value == 0:  # 넓게일 때만 설명 문구 노출
+            desc = page.locator('xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/span')
+            expect(desc).to_have_text(WIDE_DESC)
         else:
-            print("표준 선택 시 desc 미노출")
-        time.sleep(3)
+            # 표준 선택 시 해당 desc가 존재하지 않거나 비가시성일 수 있음 → 존재해도 노출 안 됨을 허용
+            pass
 
-    for name, value, keys in wide_case:
-        div_index = 2 if value == 0 else 1
-        wide_label_click = page.locator(f'xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/ul/li/div/form/div[{div_index}]/label/span')
-        wideradio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+    # 문구(라벨) 클릭
+    for name, value, key in wide_case:
+        div_index = 2 if value == 0 else 1  # value 1 표준, value 2 넓게
+        label = page.locator(
+            f'xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/ul/li/div/form/div[{div_index}]/label/span'
+        )
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+        label.click()
+        expect(radio).to_be_checked()
+        _expect_html_class_contains(page, key)
 
-        wide_label_click.click()
-        assert wideradio.is_checked(), f"{name} 문구 선택 오류"
-        print(f"{name} 선택")        
-        time.sleep(3)
-
-        html_class = page.locator("html").get_attribute("class") or ""
-        expected_widekey = f'vector-feature-limited-width-clientpref-{value}'
-        assert keys in html_class, f"{name} 선택 후 반영 실패"
-        print(f"{name} 선택 시 너비 반영")
-        time.sleep(3)
-
-
-    print("너비 라디오 버튼 검증 끝")
-
-
-def SC5(page, context):    #시나리오5 글 너비 선택 시 새 탭 열어서 유지 확인
-    for name, value, keys in wide_case:
-        radiowide = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
-        radiowide.click()
-        expect(radiowide).to_be_checked()
-        print(f"{name} 라디오 버튼 선택")
-        time.sleep(2)
+# SC5: 너비 선택 후 새 탭에서 유지 확인
+def SC5(page, context):
+    for name, value, _ in wide_case:
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+        radio.click()
+        expect(radio).to_be_checked()
 
         new_page = context.new_page()
         new_page.goto(HOME)
-        time.sleep(2)
-
-        new_radiowide = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
-        if new_radiowide.is_checked():
-            print(f"새탭 {name} 설정 유지")
-        else:
-            print(f"새탭 {name} 설정 유지 X")
-
+        new_radio = new_page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+        expect(new_radio).to_be_checked()
         new_page.close()
-        time.sleep(2)
-    print("글자 너비 설정 유지 확인")
 
-def SC6(page):    #시나리오6 글 크기 라디오 선택 해제 불가, 복수 선택 불가 TC
+# SC6: 글 크기 해제 불가 & 복수 선택 불가
+def SC6(page):
     for name, value in font_sizes:
-        sizeradio = f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]'
-        radio = page.locator(sizeradio)
-
-        radio.check()
-        expect(radio).to_be_checked()
-        print(f"{name} 버튼 클릭 및 선택 성공")
-        
-        radio = page.locator(sizeradio)
-        radio.check()
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{value}"]')
+        radio.click()
         expect(radio).to_be_checked()
 
-        html_class = page.locator("html").get_attribute("class") or ""
-        expected_keyword = f"vector-feature-custom-font-size-clientpref-{value}"
-        assert expected_keyword in html_class, f"{name} 버튼 선택 오류"
-        print(f"{name} 재선택 해제 불가 및 폰트 사이즈 유지")
+        # 재선택해도 체크 유지
+        radio.click()
+        expect(radio).to_be_checked()
 
+        _expect_html_class_contains(page, f"vector-feature-custom-font-size-clientpref-{value}")
+
+        # 같은 그룹의 다른 항목은 미체크
         for other_name, other_value in font_sizes:
-            if other_value != value:
-                other_radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{other_value}"]')
-                assert not other_radio.is_checked(), f"{name} 선택 시 {other_name}도 체크됨 (복수 선택 오류)"
-                print(f"{name} 선택 시 {other_name} 체크해제")
+            if other_value == value:
+                continue
+            other_radio = page.locator(
+                f'xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-{other_value}"]'
+            )
+            expect(other_radio).not_to_be_checked()
 
+# SC7: 너비 해제 불가 & 복수 선택 불가
+def SC7(page):
+    for name, value, key in wide_case:
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
+        radio.click()
+        expect(radio).to_be_checked()
 
-def SC7(page):    # 시나리오7 너비 라디오 선택 해제 불가, 복수 선택 불가 TC
-    for name, value, keys in wide_case:
-        wideradio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{value}"]')
-        wideradio.click()
-        expect(wideradio).to_be_checked()
-        print(f"{name} 버튼 클릭 및 선택 성공")
-        wideradio.check()
-        expect(wideradio).to_be_checked()
+        radio.click()  # 재선택
+        expect(radio).to_be_checked()
 
-        html_class = page.locator("html").get_attribute("class") or ""
-        assert keys in html_class, f"{name} 선택 후 반영 실패"
-        print(f"{name} 재선택 확인")
+        _expect_html_class_contains(page, key)
 
-        for other_name, other_value, keys in wide_case:
-            if other_value != value:
-                other_radio = page.locator(f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{other_value}"]')
-                assert not other_radio.is_checked(), f"{name} 선택 시 {other_name}도 체크됨 (복수 선택 오류)"
-                print(f"{name} 선택 시 {other_name} 체크해제")
+        for other_name, other_value, _ in wide_case:
+            if other_value == value:
+                continue
+            other_radio = page.locator(
+                f'xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-{other_value}"]'
+            )
+            expect(other_radio).not_to_be_checked()
 
-        time.sleep(3)
-
-
-def SC8(page):  # 시나리오8 테마 라디오 선택 해제 불가, 복수 선택 불가 TC
+# SC8: 테마(색상) 해제 불가 & 복수 선택 불가
+def SC8(page):
     for name, value in theme_case:
-        themeradio = page.locator(f'xpath=//*[@id="skin-client-pref-skin-theme-value-{value}"]')
-        themeradio.click()
-        expect(themeradio).to_be_checked()
-        print(f"{name} 체크 버튼 성공")
-        themeradio.click()
-        expect(themeradio).to_be_checked()
-        
+        radio = page.locator(f'xpath=//*[@id="skin-client-pref-skin-theme-value-{value}"]')
+        radio.click()
+        expect(radio).to_be_checked()
+
+        radio.click()  # 재선택
+        expect(radio).to_be_checked()
+
         for other_name, other_value in theme_case:
-            if other_value != value:
-                other_radio = page.locator(f'xpath=//*[@id="skin-client-pref-skin-theme-value-{other_value}"]')
-                assert not other_radio.is_checked(), f"{name} 선택 시 {other_name}도 체크됨 (복수 선택 오류)"
-                print(f"{name} 선택 시 {other_name} 체크해제")
+            if other_value == value:
+                continue
+            other_radio = page.locator(f'xpath=//*[@id="skin-client-pref-skin-theme-value-{other_value}"]')
+            if other_radio.count():
+                expect(other_radio).not_to_be_checked()
 
-    time.sleep(2)
-
-# 사이드 패널 숨기기 버튼 선택
+# (옵션) 사이드 패널 숨기기 버튼 흐름
 def open_appearance_button(page):
     btn = page.locator('xpath=/html/body/div[2]/div/div[3]/main/div[2]/div/nav[2]/div/div/div[1]/button[2]')
     btn.wait_for(state="visible")
     btn.click()
-    time.sleep(1)
 
     pop = page.locator('xpath=/html/body/div[1]/header/div[2]/nav/div[1]/nav/div[2]/div[1]/div')
-    pop_value = pop.get_attribute("popdesc")
-    print("popdesc: ", pop_value)
+    print("popdesc:", pop.get_attribute("popdesc"))
 
     widthwide_radio = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-0"]')
     widthwide_radio.click()
-    print("너비 넓게 선택 가능")
+    expect(widthwide_radio).to_be_checked()
 
-    # 넓게 설명문 텍스트 추출
     widthwide_desc = page.locator('xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/span')
-    wide_desc = widthwide_desc.inner_text()
-    print("desc = ",wide_desc)
+    expect(widthwide_desc).to_have_text(WIDE_DESC)
 
-    # 넓게 설명문 텍스트 확인
-    if wide_desc == "콘텐츠는 브라우저 창에 맞도록 최대한 넓게 맞춥니다." :
-        print("넓게 설명문 확인")
-    else:
-        print("넓게 설명문 오류")
+if __name__ == "__main__":
+    with sync_playwright() as p:
+        browser = p.firefox.launch(headless=False)
+        context = browser.new_context()
+        page = context.new_page()
+        page.goto(HOME)
 
+        SC1(page)
+        SC2(page)
+        SC3(page, context)
+        SC4(page)
+        SC5(page, context)
+        SC6(page)
+        SC7(page)
+        SC8(page)
 
-with sync_playwright() as p:
-    browser = p.firefox.launch(headless=False)
-    context = browser.new_context()
-    page = context.new_page()
-    page.goto(HOME)
-    time.sleep(3)
-
-    SC1(page)        # 시나리오1 테스트케이스
-    time.sleep(3)
-
-    SC2(page)        # 시나리오2 테스트케이스
-    time.sleep(3)
-   
-    SC3(page, context)        # 시나리오3 테스트케이스
-    time.sleep(3)
-
-    SC4(page)         # 시나리오4 테스트케이스
-    time.sleep(3)
-
-    SC5(page, context)        # 시나리오5 테스트케이스
-    time.sleep(3)
-
-    SC6(page)        # 시나리오6 테스트케이스
-    time.sleep(3)
-    
-    SC7(page)        # 시나리오7 테스트케이스
-    time.sleep(3)
-
-
-
-    SC8(page)       # 시나리오8 테스트케이스
-    time.sleep(3)
-    
-    browser.close()
-
+        browser.close()
