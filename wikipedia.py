@@ -22,8 +22,6 @@ theme_case = [
 ]
 
 def _expect_html_class_contains(page, fragment: str):
-    # <html class="... fragment ..."> 포함 여부를 정규식으로 체크
-    # 단어 경계로 오탐 줄이기
     pattern = re.compile(rf"\b{re.escape(fragment)}\b")
     expect(page.locator("html")).to_have_attribute("class", pattern)
 
