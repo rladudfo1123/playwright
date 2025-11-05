@@ -21,9 +21,8 @@ theme_case = [
     ("다크", "night"),
 ]
 
+# 이중 장치
 def _expect_html_class_contains(page, fragment: str):
-    # <html class="... fragment ..."> 포함 여부를 정규식으로 체크
-    # 단어 경계로 오탐 줄이기
     pattern = re.compile(rf"\b{re.escape(fragment)}\b")
     expect(page.locator("html")).to_have_attribute("class", pattern)
 
@@ -44,17 +43,14 @@ def SC1(page):
     fontsize_default_check = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-custom-font-size-value-1"]')
     expect(fontsize_default_check).to_be_checked() # 폰트사이즈 체크 확인
     print("폰트크기 디폴트 표준 선택 확인")
-    time.sleep(2)
 
     fontwide_default_check = page.locator('xpath=//*[@id="skin-client-pref-vector-feature-limited-width-value-1"]')
     expect(fontwide_default_check).to_be_checked() # 폰트너비 체크 확인
     print("폰트너비 디폴트 표준 선택 확인")
-    time.sleep(2)
     
     fontcolor_default_check = page.locator('xpath=//*[@id="skin-client-pref-skin-theme-value-day"]')
     expect(fontcolor_default_check).to_be_checked() # 색상 체크 확인
     print("폰트색상 디폴트 라이트 선택 확인")
-    time.sleep(2)
 
 # SC2: 글 크기 라디오/라벨 클릭 검증
 def SC2(page):
@@ -100,7 +96,6 @@ def SC4(page):
             desc = page.locator('xpath=//*[@id="skin-client-prefs-vector-feature-limited-width"]/div[2]/span')
             expect(desc).to_have_text(WIDE_DESC)
         else:
-            # 표준 선택 시 해당 desc가 존재하지 않거나 비가시성일 수 있음 → 존재해도 노출 안 됨을 허용
             pass
 
     # 문구(라벨) 클릭
